@@ -9,13 +9,11 @@
 #define OLED_RESET -1
 #define BMP_WIDTH  32
 #define BMP_HEIGHT 24
+#define BMP_WIDTH1  24
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
 int dotY = 0;
 int dotX = 0;
-
-// Gdy chodzi w prawo (Kij grubszy na dłuższym odcinku)
 const unsigned char ludzik_z_kijem[] PROGMEM = {
   // Szerokość 32 px (4 bajty), Wysokość 24 px
   0x00, 0x1f, 0xf8, 0x00, 
@@ -43,8 +41,6 @@ const unsigned char ludzik_z_kijem[] PROGMEM = {
   0x00, 0x1e, 0xf0, 0x00,
   0x00, 0x00, 0x00, 0x00
 };
-
-// Gdy chodzi w lewo (Kij grubszy na dłuższym odcinku)
 const unsigned char ludzik_z_kijem_lewo[] PROGMEM = {
   0x00, 0x1f, 0xf8, 0x00, 
   0x00, 0x1f, 0xf8, 0x00, 
@@ -71,7 +67,64 @@ const unsigned char ludzik_z_kijem_lewo[] PROGMEM = {
   0x00, 0x0f, 0x78, 0x00,
   0x00, 0x00, 0x00, 0x00
 };
-
+const unsigned char ludzik_z_kijem_gora[] PROGMEM = {
+  // Szerokość 24 px (3 bajty), Wysokość 24 px
+  0x00, 0x00, 0x38, // Wiersz 0: Kij (gruby)
+  0x00, 0x00, 0x38, // Wiersz 1: Kij
+  0x00, 0x00, 0x38, // Wiersz 2: Kij
+  0x00, 0x00, 0x38, // Wiersz 3: Kij
+  0x00, 0x00, 0x38, // Wiersz 4: Kij
+  0x00, 0x00, 0x38, // Wiersz 5: Kij
+  0x00, 0xff, 0x38, // Wiersz 6: Prostokątna głowa + Kij
+  0x00, 0xff, 0x38, // Wiersz 7: Głowa + Kij
+  0x00, 0xff, 0x38, // Wiersz 8: Głowa + Kij
+  0x00, 0xff, 0x38, // Wiersz 9: Głowa + Kij
+  0x3e, 0xff, 0x78, // Wiersz 10: Lewe ramię + Głowa + Prawe ramię z kijem (1px pustej przestrzeni wokół głowy!)
+  0x7e, 0xff, 0x78, // Wiersz 11: Barki + Głowa
+  0x7e, 0xff, 0x78, // Wiersz 12: Barki + Głowa
+  0x7e, 0xff, 0x78, // Wiersz 13: Barki + Głowa
+  0x7e, 0x00, 0x78, // Wiersz 14: Przerwa za głową (odcina głowę od pleców, daje efekt 3D)
+  0x3e, 0xff, 0x70, // Wiersz 15: Plecy i łokcie
+  0x1c, 0xff, 0x20, // Wiersz 16: Dolne plecy
+  0x00, 0x7e, 0x00, // Wiersz 17: Pas
+  0x00, 0x3c, 0x00, // Wiersz 18: Nogi z tyłu
+  0x00, 0x3c, 0x00, // Wiersz 19: Nogi
+  0x00, 0x24, 0x00, // Wiersz 20: Stopy
+  0x00, 0x24, 0x00, // Wiersz 21: Stopy
+  0x00, 0x00, 0x00, // Wiersz 22
+  0x00, 0x00, 0x00  // Wiersz 23
+};
+const unsigned char ludzik_z_kijem_dol[] PROGMEM = {
+  0x00, 0x00, 0x00, // Wiersz 0: Pusty
+  0x00, 0x00, 0x00, // Wiersz 1: Pusty
+  0x00, 0x24, 0x00, // Wiersz 2: Stopy
+  0x00, 0x24, 0x00, // Wiersz 3: Stopy
+  0x00, 0x3c, 0x00, // Wiersz 4: Nogi
+  0x00, 0x3c, 0x00, // Wiersz 5: Nogi
+  0x00, 0x7e, 0x00, // Wiersz 6: Pas
+  0x04, 0xff, 0x38, // Wiersz 7: Dolne plecy
+  0x0e, 0xff, 0x7c, // Wiersz 8: Plecy i łokcie
+  0x1e, 0x00, 0x7e, // Wiersz 9: Przerwa za głową (efekt 3D)
+  0x1e, 0xff, 0x7e, // Wiersz 10: Barki + Głowa
+  0x1e, 0xff, 0x7e, // Wiersz 11: Barki + Głowa
+  0x1e, 0xff, 0x7e, // Wiersz 12: Barki + Głowa
+  0x1e, 0xff, 0x7c, // Wiersz 13: Lewe ramię + Głowa + Prawe ramię z kijem
+  0x1c, 0xff, 0x00, // Wiersz 14: Kij + Głowa
+  0x1c, 0xff, 0x00, // Wiersz 15: Kij + Głowa
+  0x1c, 0xff, 0x00, // Wiersz 16: Kij + Głowa
+  0x1c, 0xff, 0x00, // Wiersz 17: Kij + Prostokątna głowa
+  0x1c, 0x00, 0x00, // Wiersz 18: Kij (gruby)
+  0x1c, 0x00, 0x00, // Wiersz 19: Kij
+  0x1c, 0x00, 0x00, // Wiersz 20: Kij
+  0x1c, 0x00, 0x00, // Wiersz 21: Kij
+  0x1c, 0x00, 0x00, // Wiersz 22: Kij
+  0x1c, 0x00, 0x00  // Wiersz 23: Kij
+};
+void start()
+{ while(PIND & B10000000)
+    display.clearDisplay();
+    display.display();
+}
 struct Postac {
   const unsigned char* bitmapa;
   int szerokosc;
@@ -81,33 +134,35 @@ struct Postac {
 int main() {
   init();
 
-  DDRD = B10000000;  // pin 7 jako wyjście (góra?), reszta wejścia
-  DDRB = B00000000;  // piny 8,9,10 jako wejścia (przyciski)
-  PORTD |= B10000000; // pull-up na pinie 7
+
+  PORTD |= B10110000; // pull-up na pinie 7,5,4
   PORTB |= B00000111; // pull-up na pinach 8,9,10
   
   int aktualny_indeks = 0;
   delay(250); // Czas na ustabilizowanie się zasilania OLEDa
-  
+  start()
   display.begin(i2c_Address, true);
   display.setRotation(2); 
   display.clearDisplay();
   display.display();
   
-  Postac ludziki[2] = {
+  Postac ludziki[4] = {
     {ludzik_z_kijem, BMP_WIDTH, BMP_HEIGHT},       // Indeks 0 (Prawo)
-    {ludzik_z_kijem_lewo, BMP_WIDTH, BMP_HEIGHT}   // Indeks 1 (Lewo)
+    {ludzik_z_kijem_lewo, BMP_WIDTH, BMP_HEIGHT},   // Indeks 1 (Lewo)
+    {ludzik_z_kijem_gora, BMP_WIDTH1, BMP_HEIGHT},
+    {ludzik_z_kijem_dol, BMP_WIDTH1, BMP_HEIGHT},    
   };
   
   while (true) {
-    // Odczyt przycisków
     if (!(PIND & B10000000)) { // góra - pin 7
       dotY -= 2;
       if (dotY < 0) dotY = 0;
+      aktualny_indeks = 2;
     }
     if (!(PINB & B00000010)) { // dół - pin 9
       dotY += 2;
       if (dotY + BMP_HEIGHT > SCREEN_HEIGHT) dotY = SCREEN_HEIGHT - BMP_HEIGHT;
+      aktualny_indeks = 3;
     }
     if (!(PINB & B00000001)) { // prawy - pin 8
       dotX += 2;
@@ -119,8 +174,6 @@ int main() {
       if (dotX < 0) dotX = 0;
       aktualny_indeks = 1;
     }
-
-    // Renderowanie klatki
     display.clearDisplay();
     display.drawBitmap(
         dotX, 
