@@ -121,7 +121,7 @@ const unsigned char ludzik_z_kijem_dol[] PROGMEM = {
   0x1c, 0x00, 0x00  // Wiersz 23: Kij
 };
 void start()
-{ while(PIND & B10000000)
+{ while(PIND & B00100000)
     display.clearDisplay();
     display.display();
 }
@@ -140,7 +140,7 @@ int main() {
   
   int aktualny_indeks = 0;
   delay(250); // Czas na ustabilizowanie się zasilania OLEDa
-  start()
+  start();
   display.begin(i2c_Address, true);
   display.setRotation(2); 
   display.clearDisplay();
