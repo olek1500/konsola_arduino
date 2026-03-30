@@ -23,7 +23,7 @@ int rekinIndeks   =  2;
 int predkoscRekina = 3;
 
 // --- ZDROWIE ---
-int zdrowieGracza = 100;
+int zdrowieGracza = 50;
 int zdrowieRekina = 100;
 // ---------------
 
@@ -316,9 +316,9 @@ void rysujRekina() {
   );
 }
 void rysujPaskiZdrowia() {
-  display.drawRect(0, 0, 52, 4, SH110X_WHITE);
+  display.drawRect(0, 0, 26, 4, SH110X_WHITE);
   display.drawRect(76, 0, 52, 4, SH110X_WHITE);
-  int szerokoscGracz = map(zdrowieGracza, 0, 100, 0, 50);
+  int szerokoscGracz = map(zdrowieGracza, 0, 50, 0, 24);
   if (szerokoscGracz > 0) {
     display.fillRect(1, 1, szerokoscGracz, 2, SH110X_WHITE);
   }
