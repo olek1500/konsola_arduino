@@ -22,19 +22,19 @@ int rekinY        = 30;
 int rekinDX       =  1;  
 int rekinDY       =  0;  
 int rekinIndeks   =  2;  
-int predkoscRekina = 1;
+int predkoscRekina = 2;
 unsigned long ostatnieUgryzienieCzas = 0;
 unsigned long ostatniAtakCzas = 0;
 bool atakTrafiony= false;
 unsigned long atakTrafionyCzas = 0;
 const unsigned long CZAS_ANIMACJI_ATAKU = 400UL;
-int zdrowieGracza = 50;
+int zdrowieGracza = 0;
 int zdrowieRekina = 100;
 bool          siatkaAktywna      = false;
 int           siatkaX            = 8;
 int           siatkaY            = 8;
 unsigned long ostatniSpawnSiatki = 0;
-const unsigned long CZAS_ZAMROZENIA  = 3000UL;  // ← 3 sekundy (tutaj decydujesz ile)
+const unsigned long CZAS_ZAMROZENIA  = 3000UL;
 bool          rekinZlapany       = false;
 unsigned long rekinZlapayCzas    = 0;
 unsigned long poprzedniCzasAnimacja = 0;
@@ -43,9 +43,28 @@ int  animFaza             = 0;
 int  animLitera           = 0;
 int  animY                = -30;
 int  animMiganie          = 0;
+int movement_speed =1;
 bool animNapisWyswietlony = false;
 unsigned long animNapisCzas = 0;
-
+unsigned int trudnosc[] =
+{
+  50, 20, 1
+};
+const unsigned char shoes[] PROGMEM  = {
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0x3f, 0xff, 0xff, 0xff, 0xfc, 0x3f, 0xff, 0xff, 0xff, 0xf8, 0x1f, 0xff, 0xff, 0xff, 0xf8, 0x0f, 
+	0xff, 0xff, 0xff, 0xf0, 0x07, 0xff, 0xff, 0xff, 0xf0, 0x00, 0x7f, 0xff, 0xff, 0xf8, 0x00, 0x7f, 
+	0xff, 0xff, 0xec, 0x00, 0x7f, 0xff, 0xff, 0xc6, 0x01, 0xff, 0xff, 0xff, 0xf3, 0x80, 0x3f, 0xff, 
+	0xf9, 0xf9, 0xc0, 0xff, 0xff, 0xff, 0xfc, 0xc0, 0x1f, 0xff, 0xff, 0xfe, 0x70, 0x7f, 0xff, 0xfe, 
+	0x3f, 0x18, 0x5f, 0xff, 0xff, 0xff, 0x8c, 0x00, 0xff, 0xf0, 0x1f, 0xc6, 0x00, 0x7f, 0xff, 0xff, 
+	0xe3, 0x00, 0x3f, 0xff, 0xff, 0xf1, 0x80, 0x3f, 0xff, 0xff, 0xf8, 0xff, 0xff, 0xff, 0xff, 0xfc, 
+	0x00, 0x1f, 0xff, 0xff, 0xfe, 0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 const unsigned char ludzik_z_kijem[] PROGMEM = {
   0x00, 0x1f, 0xf8, 0x00, 0x00, 0x1f, 0xf8, 0x00, 0x00, 0x1d, 0xd8, 0x07, 0x00, 0x1d, 0xd8, 0x0e,
   0x00, 0x3f, 0xfc, 0x1c, 0x00, 0x3d, 0xbc, 0x38, 0x00, 0x1e, 0x70, 0x70, 0x00, 0x1f, 0xf0, 0xe0,
@@ -116,6 +135,11 @@ const unsigned char rekin_odwrocony[] PROGMEM = {
 };
 const unsigned char siatka_bmp[] PROGMEM = {
   0x01, 0x00, 0x07, 0xC0, 0x19, 0x30,  0x2F, 0xE8,  0x2D, 0x68, 0x4B, 0xA4, 0x7F, 0xFC, 0x4B, 0xA4, 0x2D, 0x68, 0x2F, 0xE8, 0x19, 0x30,0x07, 0xC0,0x01, 0x00, 0x00, 0x00,0x00, 0x00,
+};
+const unsigned char atak[] PROGMEM ={
+	
+	0x00, 0x00, 0x08, 0x00, 0x06, 0x00, 0x01, 0x80, 0x00, 0xc0, 0x00, 0x60, 0x00, 0x38, 0x00, 0x1c, 
+	0x00, 0x1e, 0x00, 0x0e, 0x00, 0x07, 0x00, 0x03, 0x00, 0x03, 0x00, 0x07, 0x00, 0x06, 0x00, 0x00
 };
 struct Postac {
   const unsigned char* bitmapa;
@@ -270,39 +294,39 @@ const char* wybierzPoziom() {
     if (!(PIND & B10000000)) {
       wybranyIndeks--;
       if (wybranyIndeks < 0) wybranyIndeks = 2;
-      unsigned long t = millis(); while (millis() - t < 150) {}
+      unsigned long t = millis(); while (millis() - t < 150);
     }
     if (!(PINB & B00000010)) {
       wybranyIndeks++;
       if (wybranyIndeks > 2) wybranyIndeks = 0;
-      unsigned long t = millis(); while (millis() - t < 150) {}
+      unsigned long t = millis(); while (millis() - t < 150) ;
     }
     if (!(PIND & B00100000)) {
       wybrano = true;
-      unsigned long t = millis(); while (millis() - t < 200) {}
+      unsigned long t = millis(); while (millis() - t < 200);
+      zdrowieGracza=trudnosc[wybranyIndeks];
     }
   }
   return tryb[wybranyIndeks];
 }
-
 void obslugaWejscia() {
   if (!(PIND & B10000000)) {
-    dotY -= 2;
+    dotY -= movement_speed;
     if (dotY < 6) dotY = 6; // Ograniczenie dla paska zdrowia
     aktualny_indeks = 2;
   }
   if (!(PINB & B00000010)) {
-    dotY += 2;
+    dotY += movement_speed;
     if (dotY + BMP_HEIGHT > SCREEN_HEIGHT) dotY = SCREEN_HEIGHT - BMP_HEIGHT;
     aktualny_indeks = 3;
   }
   if (!(PINB & B00000001)) {
-    dotX += 2;
+    dotX += movement_speed;
     if (dotX + BMP_WIDTH > SCREEN_WIDTH) dotX = SCREEN_WIDTH - BMP_WIDTH;
     aktualny_indeks = 0;
   }
   if (!(PINB & B00000100)) {
-    dotX -= 2;
+    dotX -= movement_speed;
     if (dotX < 0) dotX = 0;
     aktualny_indeks = 1;
   }
@@ -336,16 +360,12 @@ void aktualizujRekina() {
   }
   if (rekinY < 6) rekinY = 6;
 }
-void rysujRekina() {
-  // Sprawdź czy animacja trafienia minęła
-  if (atakTrafiony && (millis() - atakTrafionyCzas >= CZAS_ANIMACJI_ATAKU)) {
+void rysujRekina(unsigned long teraz) {
+  if (atakTrafiony && (teraz - atakTrafionyCzas >= CZAS_ANIMACJI_ATAKU)) {
     atakTrafiony = false;
   }
-
-  // Animacja trafienia: miganie rekina + "!" nad nim
   if (atakTrafiony) {
-    // Rekin miga co ~80ms (raz widoczny, raz nie)
-    if ((millis() / 80) % 2 == 0) {
+    if ((teraz / 80) % 2 == 0) {
       display.drawBitmap(
         rekinX, rekinY,
         rekiny[rekinIndeks].bitmapa,
@@ -354,24 +374,18 @@ void rysujRekina() {
         SH110X_WHITE
       );
     }
-    // Wykrzyknik nad rekinem
-    display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(rekinX + 8, rekinY - 8);
-    display.print("!");
-    return; // Pomijamy normalne rysowanie
+    display.drawBitmap(rekinX + 8, rekinY + 5, atak, 16, 16, SH110X_WHITE);
   }
 
   if (rekinZlapany) {
-    // Rysujemy rekina do góry nogami
     display.drawBitmap(
       rekinX, rekinY,
-      rekin_odwrocony, // Używamy naszej nowej bitmapy!
+      rekin_odwrocony, 
       REKIN_SIZE, REKIN_SIZE,
       SH110X_WHITE
     );
-  } else {
-    // Normalne rysowanie żywego rekina
+  } 
+  else {
     display.drawBitmap(
       rekinX, rekinY,
       rekiny[rekinIndeks].bitmapa,
@@ -422,69 +436,72 @@ int margines = 8;
   }
 
   if (rekinZlapany && (teraz - rekinZlapayCzas >= CZAS_ZAMROZENIA)) {
-    rekinZlapany       = false;
+    rekinZlapany  = false;
     
   }
 }
 void sprawdzKolizjeZGraczem(unsigned long teraz) {
   if (rekinZlapany) return;
-  bool kolX = (rekinX < dotX + BMP_WIDTH) && (rekinX + REKIN_SIZE > dotX);
-  bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE > dotY);
-
+  int marginesGracza = 4; 
+  int marginesRekina = 6;
+  int gLewo  = dotX + marginesGracza;
+  int gPrawo = dotX + BMP_WIDTH - marginesGracza;
+  int gGora  = dotY + marginesGracza;
+  int gDol   = dotY + BMP_HEIGHT - marginesGracza;
+  int rLewo  = rekinX + marginesRekina;
+  int rPrawo = rekinX + REKIN_SIZE - marginesRekina;
+  int rGora  = rekinY + marginesRekina;
+  int rDol   = rekinY + REKIN_SIZE - marginesRekina;
+  bool kolX = (rLewo < gPrawo) && (rPrawo > gLewo);
+  bool kolY = (rGora < gDol) && (rDol > gGora);
   if (kolX && kolY) {
-    if (teraz - ostatnieUgryzienieCzas >= 1000) {
-      zdrowieGracza -= 5;
+    if (teraz - ostatnieUgryzienieCzas >= 500) {
+      zdrowieGracza -= 10;
       ostatnieUgryzienieCzas = teraz;
-      if (zdrowieGracza < 0) {
-        zdrowieGracza = 0;
-      }
+      if (zdrowieGracza < 0) zdrowieGracza = 0;
     }
   }
 }
 void sprawdzAtakGracza(unsigned long teraz) {
   if (!(PIND & B00100000)) { 
     if (teraz - ostatniAtakCzas >= 500) {
-      ostatniAtakCzas = teraz; // Rejestrujemy próbę ataku
-      bool kolX = (rekinX < dotX + BMP_WIDTH) && (rekinX + REKIN_SIZE > dotX);
-      bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE > dotY);
+      ostatniAtakCzas = teraz;
+      bool kolX = (rekinX < dotX + BMP_WIDTH) && (rekinX + REKIN_SIZE/2 > dotX);
+      bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE/2> dotY);
 
-if (kolX && kolY) {
-    zdrowieRekina -= 10;
-    if (zdrowieRekina < 0) {
+  if (kolX && kolY) {
+    zdrowieRekina -= 5;
+      if (zdrowieRekina < 0) {
         zdrowieRekina = 0;
     }
-    // Włącz animację trafienia
     atakTrafiony      = true;
     atakTrafionyCzas  = teraz;
-}
+    }
     }
   }
 }
-void ekranKoncaGry(bool wygrales) {
+void stphase(bool wygrales) {
   display.clearDisplay();
-  display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
-
+  int x = (display.width() - SCREEN_WIDTH) / 2;
+  int y = (display.height() - SCREEN_HEIGHT) / 2;
   if (wygrales) {
-    display.setCursor(20, 20);
-    display.print("YOU WIN!");
-    display.setCursor(18, 42);
-    display.print(":)");
+    display.setTextSize(1);
+    display.setCursor(10, 0); 
+    display.println("YOU RECEIVED A NEW ITEM!");
+    display.drawBitmap(40,16,shoes,40,40,SH110X_WHITE);
+
   } else {
-    display.setCursor(14, 20);
-    display.print("YOU LOSE");
-    display.setCursor(18, 42);
-    display.print(":(");
+    display.setTextSize(2); 
+    display.setCursor(20, 0); 
+    display.println("YOU LOOSE");
   }
-
   display.display();
-
-  // Czekaj aż gracz wciśnie przycisk akcji
-  while (PIND & B00100000) {}
+  movement_speed ++;
 }
+//void nextlevel{ display.clearDisplay();}
 int main() {
   init();
-
   PORTD |= B10110000;
   PORTB |= B00000111;
 
@@ -500,13 +517,11 @@ int main() {
   while (!animacjaPoczatkowa()) {}
 
   const char* aktualnyPoziom = wybierzPoziom();
-
   display.clearDisplay();
-  display.setTextSize(1);
+  display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(15, 25);
-
-  display.print(aktualnyPoziom);
+  display.print("LOADING ...");
   display.display();
 
   unsigned long startLvlCzas = millis();
@@ -518,13 +533,9 @@ int main() {
     unsigned long teraz = millis();
     if (teraz - poprzedniCzasGra >= 16) {
       poprzedniCzasGra = teraz;
-
       obslugaWejscia();
-
       display.clearDisplay();
       rysujPaskiZdrowia();
-
-      // Rysuj Gracza
       display.drawBitmap(
         dotX, dotY,
         ludziki[aktualny_indeks].bitmapa,
@@ -532,32 +543,33 @@ int main() {
         ludziki[aktualny_indeks].wysokosc,
         SH110X_WHITE
       );
-
-
-      if (strcmp(aktualnyPoziom, "easy") == 0) {
         aktualizujSiatke(teraz);   
         aktualizujRekina();
-        sprawdzKolizjeZGraczem(teraz); // ← DODAJ TO TUTAJ!
+        sprawdzKolizjeZGraczem(teraz); 
         sprawdzAtakGracza(teraz);
-       rysujSiatke();             
-      rysujRekina();
-
-      // Sprawdź warunki końca gry
+        rysujSiatke();             
+        rysujRekina(teraz);
+        if (rekinZlapany && (teraz - rekinZlapayCzas >= 2000)){
+          display.setTextSize(2);
+          display.setTextColor(SH110X_WHITE);
+          display.setCursor(64, 32); 
+          display.print("RUN!");
+        }
+        display.display();
       if (zdrowieGracza <= 0) {
         display.display();
-        ekranKoncaGry(false); // YOU LOSE
+        stphase(false); 
         return 0;
       }
       if (zdrowieRekina <= 0) {
         display.display();
-        ekranKoncaGry(true);  // YOU WIN
+        stphase(true);
+        //nextlevel()
         return 0;
       }
     }
 
     display.display();
     }
-  }
-
-  return 0;
+return 0;
 }
