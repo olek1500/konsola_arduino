@@ -10,8 +10,10 @@
 #define BMP_HEIGHT     24
 #define BMP_WIDTH1     24
 #define REKIN_SIZE     24 
-
+#define SIATKA_SIZE    16 
+#define SPAWN_INTERWAL 5000UL
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 int dotY = 10; 
 int dotX = 10;
 int aktualny_indeks = 0;
@@ -23,28 +25,19 @@ int rekinIndeks   =  2;
 int predkoscRekina = 1;
 unsigned long ostatnieUgryzienieCzas = 0;
 unsigned long ostatniAtakCzas = 0;
-bool atakTrafiony        = false;
+bool atakTrafiony= false;
 unsigned long atakTrafionyCzas = 0;
 const unsigned long CZAS_ANIMACJI_ATAKU = 400UL;
-// --- ZDROWIE ---
 int zdrowieGracza = 50;
 int zdrowieRekina = 100;
-
-// --- SIATKA ---
-#define SIATKA_SIZE              16   // 16x16 zamiast 20x20
-
 bool          siatkaAktywna      = false;
-int           siatkaX            = 0;
-int           siatkaY            = 0;
+int           siatkaX            = 8;
+int           siatkaY            = 8;
 unsigned long ostatniSpawnSiatki = 0;
-const unsigned long SPAWN_INTERWAL   = 8000UL;  // ← 8 sekund
 const unsigned long CZAS_ZAMROZENIA  = 3000UL;  // ← 3 sekundy (tutaj decydujesz ile)
-
 bool          rekinZlapany       = false;
 unsigned long rekinZlapayCzas    = 0;
-
 unsigned long poprzedniCzasAnimacja = 0;
-// ... i tak dalej
 unsigned long poprzedniCzasGra      = 0;
 int  animFaza             = 0;
 int  animLitera           = 0;
@@ -61,7 +54,6 @@ const unsigned char ludzik_z_kijem[] PROGMEM = {
   0x00, 0x0c, 0x60, 0x00, 0x00, 0x0c, 0x60, 0x00, 0x00, 0x0c, 0x60, 0x00, 0x00, 0x0c, 0x60, 0x00,
   0x00, 0x0c, 0x60, 0x00, 0x00, 0x1e, 0xf0, 0x00, 0x00, 0x1e, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
-
 const unsigned char ludzik_z_kijem_lewo[] PROGMEM = {
   0x00, 0x1f, 0xf8, 0x00, 0x00, 0x1f, 0xf8, 0x00, 0xe0, 0x1b, 0xb8, 0x00, 0x70, 0x1b, 0xb8, 0x00,
   0x38, 0x3f, 0xfc, 0x00, 0x1c, 0x3d, 0xbc, 0x00, 0x0e, 0x0e, 0x78, 0x00, 0x07, 0x0f, 0xf8, 0x00,
@@ -82,7 +74,6 @@ const unsigned char ludzik_z_kijem_dol[] PROGMEM = {
   0x1e, 0xff, 0x7e, 0x1e, 0xff, 0x7c, 0x1c, 0xff, 0x00, 0x1c, 0xff, 0x00, 0x1c, 0xff, 0x00, 0x1c, 0xff, 0x00,
   0x1c, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x1c, 0x00, 0x00
 };
-
 const unsigned char rekin_gora[] PROGMEM = {
   0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x7e, 0x00, 0x00, 0xff, 0x00,
   0x01, 0xff, 0x80, 0x01, 0xff, 0x80, 0x03, 0xff, 0xc0, 0x07, 0xff, 0xe0,
@@ -91,7 +82,6 @@ const unsigned char rekin_gora[] PROGMEM = {
   0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 0x00, 0x3c, 0x00,
   0x00, 0x7e, 0x00, 0x00, 0xff, 0x00, 0x01, 0xc3, 0x80, 0x01, 0x81, 0x80
 };
-
 const unsigned char rekin_dol[] PROGMEM = {
   0x01, 0x81, 0x80, 0x01, 0xc3, 0x80, 0x00, 0xff, 0x00, 0x00, 0x7e, 0x00,
   0x00, 0x3c, 0x00, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00,
@@ -100,9 +90,6 @@ const unsigned char rekin_dol[] PROGMEM = {
   0x07, 0xff, 0xe0, 0x03, 0xff, 0xc0, 0x01, 0xff, 0x80, 0x01, 0xff, 0x80,
   0x00, 0xff, 0x00, 0x00, 0x7e, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18, 0x00
 };
-
-
-
 const unsigned char rekin_lewo[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x3e, 0x00,
@@ -111,7 +98,6 @@ const unsigned char rekin_lewo[] PROGMEM = {
   0x00, 0x1e, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
-
 const unsigned char rekin_prawo[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x78, 0x00, 0x00, 0x7c, 0x00,
@@ -129,24 +115,8 @@ const unsigned char rekin_odwrocony[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 const unsigned char siatka_bmp[] PROGMEM = {
-  0x00, 0x00,  // . . . . . . . . . . . . . . . .
-  0x01, 0x00,  // . . . . . . . X . . . . . . . .
-  0x07, 0xC0,  // . . . . . X X X X X . . . . . .
-  0x19, 0x30,  // . . . X X . . X . . X X . . . .
-  0x2F, 0xE8,  // . . X . X X X X X X X . X . . .
-  0x2D, 0x68,  // . . X . X . X . X . X . X . . .
-  0x4B, 0xA4,  // . X . . X . X X X . X . . X . .
-  0x7F, 0xFC,  // . X X X X X X X X X X X X X . .
-  0x4B, 0xA4,  // . X . . X . X X X . X . . X . .
-  0x2D, 0x68,  // . . X . X . X . X . X . X . . .
-  0x2F, 0xE8,  // . . X . X X X X X X X . X . . .
-  0x19, 0x30,  // . . . X X . . X . . X X . . . .
-  0x07, 0xC0,  // . . . . . X X X X X . . . . . .
-  0x01, 0x00,  // . . . . . . . X . . . . . . . .
-  0x00, 0x00,
-  0x00, 0x00,
+  0x01, 0x00, 0x07, 0xC0, 0x19, 0x30,  0x2F, 0xE8,  0x2D, 0x68, 0x4B, 0xA4, 0x7F, 0xFC, 0x4B, 0xA4, 0x2D, 0x68, 0x2F, 0xE8, 0x19, 0x30,0x07, 0xC0,0x01, 0x00, 0x00, 0x00,0x00, 0x00,
 };
-// ── Struktury Postac ─────────────────────────────────────────────────────────
 struct Postac {
   const unsigned char* bitmapa;
   int szerokosc;
@@ -164,16 +134,33 @@ Postac rekiny[4] = {
   {rekin_prawo, REKIN_SIZE, REKIN_SIZE},
   {rekin_lewo,  REKIN_SIZE, REKIN_SIZE},
 };
-
-// ── Start ────────────────────────────────────────────────────────────────────
 void start() {
-  while (PIND & B00100000) {
+  bool flash = true; 
+  while (PIND & B00100000) {  
     display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(10, 10);
+    display.println(F("TRIPLE T"));
+    if (flash) {
+      display.setTextSize(1);
+      display.setCursor(15, 35);
+      display.println(F("PRESS START"));
+    }
+    
     display.display();
+    static unsigned long lastMillis = 0;
+    if (millis() - lastMillis > 500) {
+      flash = !flash;
+      lastMillis = millis();
+    }
   }
+  display.clearDisplay();
+  display.setCursor(10, 30);
+  display.print(F("LOADING..."));
+  display.display();
+  delay(1000);
 }
-
-// ── Animacja początkowa ───────────────────────────────────────
 bool animacjaPoczatkowa() {
   const int pozX[3]   = {20, 54, 88};
   const int doceloweY = 16;
@@ -259,7 +246,6 @@ bool animacjaPoczatkowa() {
 
   return true;
 }
-
 const char* wybierzPoziom() {
   const char* tryb[] = {"easy", "medium", "hard"};
   int wybranyIndeks = 0;
@@ -321,7 +307,6 @@ void obslugaWejscia() {
     aktualny_indeks = 1;
   }
 }
-
 void aktualizujRekina() {
   if (rekinZlapany) return; 
   static int opoznienieRuchu = 0;
@@ -351,7 +336,6 @@ void aktualizujRekina() {
   }
   if (rekinY < 6) rekinY = 6;
 }
-
 void rysujRekina() {
   // Sprawdź czy animacja trafienia minęła
   if (atakTrafiony && (millis() - atakTrafionyCzas >= CZAS_ANIMACJI_ATAKU)) {
@@ -418,15 +402,10 @@ void rysujSiatke() {
     SH110X_WHITE
   );
 }
-
 void aktualizujSiatke(unsigned long teraz) {
   if (!siatkaAktywna && (teraz - ostatniSpawnSiatki >= SPAWN_INTERWAL)) {
-int margines = 5; // Zmień tę wartość, jeśli chcesz większy/mniejszy odstęp
-    
-
+int margines = 8; 
     siatkaX = random(margines, SCREEN_WIDTH - SIATKA_SIZE - margines);
-    
-
     siatkaY = random(6 + margines, SCREEN_HEIGHT - SIATKA_SIZE - margines);
     siatkaAktywna = true;
   }
@@ -435,6 +414,7 @@ int margines = 5; // Zmień tę wartość, jeśli chcesz większy/mniejszy odst�
     bool kolX = (rekinX < siatkaX + SIATKA_SIZE) && (rekinX + REKIN_SIZE > siatkaX);
     bool kolY = (rekinY < siatkaY + SIATKA_SIZE) && (rekinY + REKIN_SIZE > siatkaY);
     if (kolX && kolY) {
+      ostatniSpawnSiatki = teraz;
       rekinZlapany    = true;
       rekinZlapayCzas = teraz;
       siatkaAktywna   = false;
@@ -443,24 +423,18 @@ int margines = 5; // Zmień tę wartość, jeśli chcesz większy/mniejszy odst�
 
   if (rekinZlapany && (teraz - rekinZlapayCzas >= CZAS_ZAMROZENIA)) {
     rekinZlapany       = false;
-    ostatniSpawnSiatki = teraz;
+    
   }
 }
 void sprawdzKolizjeZGraczem(unsigned long teraz) {
-  // Jeśli rekin jest w siatce, nie może nas ugryźć!
   if (rekinZlapany) return;
-
-  // Prosty warunek kolizji dwóch prostokątów (tzw. AABB hitbox)
   bool kolX = (rekinX < dotX + BMP_WIDTH) && (rekinX + REKIN_SIZE > dotX);
   bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE > dotY);
 
   if (kolX && kolY) {
-    // Sprawdzamy, czy minęła sekunda (1000 ms) od ostatniego ugryzienia
     if (teraz - ostatnieUgryzienieCzas >= 1000) {
       zdrowieGracza -= 5;
       ostatnieUgryzienieCzas = teraz;
-      
-      // Zabezpieczenie, żeby HP nie zeszło poniżej zera
       if (zdrowieGracza < 0) {
         zdrowieGracza = 0;
       }
@@ -468,14 +442,9 @@ void sprawdzKolizjeZGraczem(unsigned long teraz) {
   }
 }
 void sprawdzAtakGracza(unsigned long teraz) {
-  // Przycisk akcji to u Ciebie Pin 5 (stan niski oznacza wciśnięcie)
   if (!(PIND & B00100000)) { 
-    
-    // Sprawdzamy, czy od ostatniego machnięcia kijem minęło 500 ms (pół sekundy)
     if (teraz - ostatniAtakCzas >= 500) {
       ostatniAtakCzas = teraz; // Rejestrujemy próbę ataku
-
-      // Sprawdzamy, czy nasz ludzik "dotyka" rekina
       bool kolX = (rekinX < dotX + BMP_WIDTH) && (rekinX + REKIN_SIZE > dotX);
       bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE > dotY);
 
@@ -513,7 +482,6 @@ void ekranKoncaGry(bool wygrales) {
   // Czekaj aż gracz wciśnie przycisk akcji
   while (PIND & B00100000) {}
 }
-// ── Main ─────────────────────────────────────────────────────────────────────
 int main() {
   init();
 
@@ -565,7 +533,7 @@ int main() {
         SH110X_WHITE
       );
 
-// Logika gry w zależności od poziomu
+
       if (strcmp(aktualnyPoziom, "easy") == 0) {
         aktualizujSiatke(teraz);   
         aktualizujRekina();
