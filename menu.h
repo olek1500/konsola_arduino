@@ -123,7 +123,6 @@ bool animacjaPoczatkowa() {
 
   return true;
 }
-
 const char* wybierzPoziom() {
   const char* tryb[] = {"easy", "medium", "hard"};
   int wybranyIndeks = 0;
