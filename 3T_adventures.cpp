@@ -20,6 +20,8 @@ int dotX = 10;
 int aktualny_indeks = 0;
 int rekinX        = 90;
 int rekinY        = 30;
+int krokX         = 100;
+int krokY         = 30;
 int rekinDX       =  1;  
 int rekinDY       =  0;  
 int rekinIndeks   =  2;  
@@ -30,7 +32,8 @@ bool atakTrafiony= false;
 unsigned long atakTrafionyCzas = 0;
 const unsigned long CZAS_ANIMACJI_ATAKU = 400UL;
 int zdrowieGracza = 0;
-int zdrowieRekina = 100;
+int zdrowieRekina = 10;
+int zdrowieKrokodyla = 100;
 bool          siatkaAktywna      = false;
 int           siatkaX            = 8;
 int           siatkaY            = 8;
@@ -51,7 +54,17 @@ unsigned int trudnosc[] =
 {
   50, 20, 1
 };
-
+void rekin()
+{
+    display.clearDisplay();
+    display.drawBitmap(32,16,rekin_w_butach,64,48,SH110X_WHITE);
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(15,0);
+    display.print("NEXT OPPONENT :");
+    display.display();
+    display.display();
+}
 void aktualizujRekina() {
   if (rekinZlapany) return; 
   static int opoznienieRuchu = 0;
@@ -116,14 +129,14 @@ void rysujRekina(unsigned long teraz) {
     );
   }
 }
-void rysujPaskiZdrowia() {
+void rysujPaskiZdrowia(int zdrowieopp) {
   display.drawRect(0, 0, 26, 4, SH110X_WHITE);
   display.drawRect(76, 0, 52, 4, SH110X_WHITE);
   int szerokoscGracz = map(zdrowieGracza, 0, 50, 0, 24);
   if (szerokoscGracz > 0) {
     display.fillRect(1, 1, szerokoscGracz, 2, SH110X_WHITE);
   }
-  int szerokoscRekin = map(zdrowieRekina, 0, 100, 0, 50);
+  int szerokoscRekin = map(zdrowieopp, 0, 100, 0, 50);
   if (szerokoscRekin > 0) {
     display.fillRect(127 - szerokoscRekin, 1, szerokoscRekin, 2, SH110X_WHITE);
   }
@@ -220,7 +233,7 @@ void stphase(bool wygrales) {
   display.display();
   movement_speed ++;
 }
-void nextlevel()
+void bombardiro()
   { display.clearDisplay();
     display.drawBitmap(16,16,krokodyl_bombowiec,96,48,SH110X_WHITE);
     display.setTextSize(1);
@@ -228,8 +241,16 @@ void nextlevel()
     display.setCursor(15,0);
     display.print("NEXT OPPONENT :");
     display.display();
-    display.display();
   }
+void rysujBK(){
+  display.drawBitmap(
+      krokX, krokY,
+      samolot[rekinIndeks].bitmapa,
+      samolot[rekinIndeks].szerokosc,
+      samolot[rekinIndeks].wysokosc,
+      SH110X_WHITE);
+}
+//void aktualizujBK(){}
 int main() {
   init();
   PORTD |= B10110000;
@@ -253,7 +274,9 @@ int main() {
   display.setCursor(15, 25);
   display.print("LOADING ...");
   display.display();
-
+  delay(500);
+  rekin();
+  delay(1000);
   unsigned long startLvlCzas = millis();
   while (millis() - startLvlCzas < 1500) {}
 
@@ -265,7 +288,7 @@ int main() {
       poprzedniCzasGra = teraz;
       obslugaWejscia(BMP_HEIGHT,SCREEN_HEIGHT,BMP_WIDTH,SCREEN_WIDTH);
       display.clearDisplay();
-      rysujPaskiZdrowia();
+      rysujPaskiZdrowia(zdrowieRekina);
       display.drawBitmap(
         dotX, dotY,
         ludziki[aktualny_indeks].bitmapa,
@@ -293,10 +316,26 @@ int main() {
       }
       if (zdrowieRekina <= 0) {
         stphase(true);
-        display.display();
-        delay(2000);
-        nextlevel();
-        return 0;
+          display.display();
+          delay(2000);
+          bombardiro();
+          delay(2000);
+          display.clearDisplay();
+        while(1){
+          
+          obslugaWejscia(BMP_HEIGHT,SCREEN_HEIGHT,BMP_WIDTH,SCREEN_WIDTH);
+          display.clearDisplay();
+          rysujPaskiZdrowia(zdrowieKrokodyla);
+          display.drawBitmap(
+          dotX, dotY,
+          ludziki[aktualny_indeks].bitmapa,
+          ludziki[aktualny_indeks].szerokosc,
+          ludziki[aktualny_indeks].wysokosc,
+          SH110X_WHITE);
+        //aktualizujBK();
+        //rysujBK();
+          display.display();
+        }
       }
     }
     display.display();
