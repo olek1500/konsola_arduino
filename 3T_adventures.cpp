@@ -20,12 +20,20 @@ int dotX = 10;
 int aktualny_indeks = 0;
 int rekinX        = 90;
 int rekinY        = 30;
-int krokX         = 100;
-int krokY         = 30;
 int rekinDX       =  1;  
 int rekinDY       =  0;  
 int rekinIndeks   =  2;  
 int predkoscRekina = 2;
+int krokX         = 128; // Zaczyna za prawą krawędzią ekranu (SCREEN_WIDTH)
+int krokY         = 30;
+int krokDX        = -2;  // Ujemna prędkość, bo na start leci w lewo
+int krokKierunek  = 0;   // Indeks 0 to grafika 'krok_lewo' w tablicy samolot
+// --- Zmienne dla statycznej Bomby ---
+bool bombaAktywna = false;
+int bombaX = 0;
+int bombaY = 0;
+unsigned long czasPojawieniaBomby = 0;
+
 unsigned long ostatnieUgryzienieCzas = 0;
 unsigned long ostatniAtakCzas = 0;
 bool atakTrafiony= false;
@@ -50,6 +58,8 @@ int  animMiganie          = 0;
 int movement_speed =2;
 bool animNapisWyswietlony = false;
 unsigned long animNapisCzas = 0;
+int indeksBK = 0;
+
 unsigned int trudnosc[] =
 {
   50, 20, 1
@@ -242,15 +252,63 @@ void bombardiro()
     display.print("NEXT OPPONENT :");
     display.display();
   }
-void rysujBK(){
+void rysujBK() {
   display.drawBitmap(
       krokX, krokY,
-      samolot[rekinIndeks].bitmapa,
-      samolot[rekinIndeks].szerokosc,
-      samolot[rekinIndeks].wysokosc,
+      samolot[krokKierunek].bitmapa, 
+      samolot[krokKierunek].szerokosc,
+      samolot[krokKierunek].wysokosc,
       SH110X_WHITE);
 }
-//void aktualizujBK(){}
+void aktualizujBK() {
+  krokX += krokDX; // Przesuwamy bossa (dodając ujemne lub dodatnie krokDX)
+
+  // 1. Jeśli leciał w LEWO i całkowicie wyleciał za lewą krawędź
+  if (krokDX < 0 && krokX < -samolot[0].szerokosc) {
+    krokDX = 2;          // Zmieniamy wektor ruchu na prawo
+    krokKierunek = 1;    // Zmieniamy grafikę na 'krok_prawo' (indeks 1)
+    
+    // Losujemy nową wysokość dla lotu w prawo
+    krokY = random(6, SCREEN_HEIGHT - samolot[1].wysokosc); 
+  }
+  // 2. Jeśli leciał w PRAWO i całkowicie wyleciał za prawą krawędź
+  else if (krokDX > 0 && krokX > SCREEN_WIDTH) {
+    krokDX = -2;         // Zmieniamy wektor ruchu na lewo
+    krokKierunek = 0;    // Zmieniamy grafikę na 'krok_lewo' (indeks 0)
+    
+    // Losujemy nową wysokość dla lotu w lewo
+    krokY = random(6, SCREEN_HEIGHT - samolot[0].wysokosc); 
+  }
+}
+void aktualizujBombe(unsigned long teraz) {
+  // 1. Jeśli nie ma bomby na ekranie, próbujemy ją zrzucić
+  if (!bombaAktywna) {
+    // Niewielka szansa co klatkę (zmień to '2', jeśli pojawia się za rzadko/za często)
+    if (random(0, 100) < 2) { 
+      bombaAktywna = true;
+      bombaX = krokX + 16; // Przesunięcie względem samolotu (dopasujesz pod swoją bitmapę)
+      bombaY = krokY + 16; 
+      czasPojawieniaBomby = teraz; // Zapisujemy stoper
+    }
+  }
+
+  // 2. Jeśli bomba już leży, odliczamy 3 sekundy
+  if (bombaAktywna) {
+    if (teraz - czasPojawieniaBomby >= 3000) { // 3000 ms = 3 sekundy
+      bombaAktywna = false; // Czas minął, bomba znika
+    }
+  }
+}
+
+void rysujBombe() {
+  if (bombaAktywna) {
+    // Póki co kwadrat, jak prosiłeś (8x8 pikseli)
+    display.fillRect(bombaX, bombaY, 8, 8, SH110X_WHITE);
+    
+    // Docelowo podmienisz na:
+    // display.drawBitmap(bombaX, bombaY, nazwa_bitmapy, SZEROKOSC, WYSOKOSC, SH110X_WHITE);
+  }
+}
 int main() {
   init();
   PORTD |= B10110000;
@@ -331,9 +389,14 @@ int main() {
           ludziki[aktualny_indeks].bitmapa,
           ludziki[aktualny_indeks].szerokosc,
           ludziki[aktualny_indeks].wysokosc,
-          SH110X_WHITE);
-        //aktualizujBK();
-        //rysujBK();
+ SH110X_WHITE);
+          
+          aktualizujBK();          // Twoja funkcja samolotu
+          aktualizujBombe(teraz);  // <--- DODANE
+          
+          rysujBK();               // Twoja funkcja samolotu
+          rysujBombe();            // <--- DODANE
+          
           display.display();
         }
       }
