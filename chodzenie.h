@@ -4,7 +4,7 @@ extern int dotY;
 extern int dotX;
 extern int aktualny_indeks;
 extern int movement_speed;
-void obslugaWejscia(unsigned int BMP_HEIGHT, unsigned int SCREEN_HEIGHT, unsigned int BMP_WIDTH, unsigned int SCREEN_WIDTH)
+void obslugaWejscia()
   {
     if (!(PIND & B10000000)) {
     dotY -= movement_speed;

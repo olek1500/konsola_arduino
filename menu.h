@@ -1,5 +1,23 @@
 #pragma once
 #include <Adafruit_SH110X.h>
+#include "dane.h" 
+extern Adafruit_SH1106G display;
+extern int animFaza;
+extern int animLitera;
+extern int animY;
+extern int animMiganie;
+extern bool animNapisWyswietlony;
+extern unsigned long animNapisCzas;
+extern unsigned long poprzedniCzasAnimacja;
+extern int zdrowieGracza;
+extern int movement_speed; 
+extern unsigned int trudnosc[];
+#ifndef SCREEN_WIDTH
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#endif
+#pragma once
+#include <Adafruit_SH110X.h>
 extern Adafruit_SH1106G display;
 extern int animFaza;
 extern int animLitera;
@@ -10,7 +28,11 @@ extern unsigned long animNapisCzas;
 extern unsigned long poprzedniCzasAnimacja;
 extern int zdrowieGracza;
 extern unsigned int trudnosc[];
-
+void stphase(bool wygrales);
+void bombardiro();
+void rysujPaskiZdrowia(int zdrowieopp);
+void start();
+bool animacjaPoczatkowa();
 void start() {
   bool flash = true;
   while (PIND & B00100000) {
@@ -161,4 +183,44 @@ const char* wybierzPoziom() {
     }
   }
   return tryb[wybranyIndeks];
+}
+void stphase(bool wygrales) {
+  display.clearDisplay();
+  display.setTextColor(SH110X_WHITE);
+  int x = (display.width() - SCREEN_WIDTH) / 2;
+  int y = (display.height() - SCREEN_HEIGHT) / 2;
+  if (wygrales) {
+    display.setTextSize(1);
+    display.setCursor(10, 0); 
+    display.println("YOU RECEIVED A NEW ITEM!");
+    display.drawBitmap(40,16,shoes,40,40,SH110X_WHITE);
+
+  } else {
+    display.setTextSize(2); 
+    display.setCursor(20, 0); 
+    display.println("YOU LOOSE");
+  }
+  display.display();
+  movement_speed ++;
+}
+void bombardiro()
+  { display.clearDisplay();
+    display.drawBitmap(16,16,krokodyl_bombowiec,96,48,SH110X_WHITE);
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(15,0);
+    display.print("NEXT OPPONENT :");
+    display.display();
+  }
+void rysujPaskiZdrowia(int zdrowieopp) {
+  display.drawRect(0, 0, 26, 4, SH110X_WHITE);
+  display.drawRect(76, 0, 52, 4, SH110X_WHITE);
+  int szerokoscGracz = map(zdrowieGracza, 0, 50, 0, 24);
+  if (szerokoscGracz > 0) {
+    display.fillRect(1, 1, szerokoscGracz, 2, SH110X_WHITE);
+  }
+  int szerokoscRekin = map(zdrowieopp, 0, 100, 0, 50);
+  if (szerokoscRekin > 0) {
+    display.fillRect(127 - szerokoscRekin, 1, szerokoscRekin, 2, SH110X_WHITE);
+  }
 }
