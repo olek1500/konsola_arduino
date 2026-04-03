@@ -3,12 +3,13 @@
 void rekin()
 {
     display.clearDisplay();
-    display.drawBitmap(32,16,rekin_w_butach,64,48,SH110X_WHITE);
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
-    display.setCursor(15,0);
-    display.print("NEXT OPPONENT :");
-    display.display();
+    display.setCursor(15, 6);
+    display.print("NEXT BOSS");
+    display.setTextSize(2);
+    display.setCursor(30, 28);
+    display.print("SHARK");
     display.display();
 }
 void aktualizujRekina() {
@@ -40,12 +41,22 @@ void aktualizujRekina() {
   }
   if (rekinY < 6) rekinY = 6;
 }
-void rysujRekina(unsigned long teraz) {
+void rysujRekina(uint16_t teraz) {
   if (atakTrafiony && (teraz - atakTrafionyCzas >= CZAS_ANIMACJI_ATAKU)) {
     atakTrafiony = false;
   }
-  if (atakTrafiony) {
-    if ((teraz / 80) % 2 == 0) {
+  bool ukryjRekina = atakTrafiony && ((teraz / 80) % 2 != 0);
+
+  if (!ukryjRekina) {
+    if (rekinZlapany) {
+      display.drawBitmap(
+        rekinX, rekinY,
+        rekin_odwrocony,
+        REKIN_SIZE, REKIN_SIZE,
+        SH110X_WHITE
+      );
+    }
+    else {
       display.drawBitmap(
         rekinX, rekinY,
         rekiny[rekinIndeks].bitmapa,
@@ -54,25 +65,10 @@ void rysujRekina(unsigned long teraz) {
         SH110X_WHITE
       );
     }
-    display.drawBitmap(rekinX + 8, rekinY + 5, atak, 16, 16, SH110X_WHITE);
   }
 
-  if (rekinZlapany) {
-    display.drawBitmap(
-      rekinX, rekinY,
-      rekin_odwrocony, 
-      REKIN_SIZE, REKIN_SIZE,
-      SH110X_WHITE
-    );
-  } 
-  else {
-    display.drawBitmap(
-      rekinX, rekinY,
-      rekiny[rekinIndeks].bitmapa,
-      rekiny[rekinIndeks].szerokosc,
-      rekiny[rekinIndeks].wysokosc,
-      SH110X_WHITE
-    );
+  if (atakTrafiony) {
+    display.drawBitmap(rekinX + 8, rekinY + 5, atak, 16, 16, SH110X_WHITE);
   }
 }
 void rysujSiatke() {
@@ -84,7 +80,7 @@ void rysujSiatke() {
     SH110X_WHITE
   );
 }
-void aktualizujSiatke(unsigned long teraz) {
+void aktualizujSiatke(uint16_t teraz) {
   if (!siatkaAktywna && (teraz - ostatniSpawnSiatki >= SPAWN_INTERWAL)) {
     int margines = 8; 
     siatkaX = random(margines, SCREEN_WIDTH - SIATKA_SIZE - margines);
@@ -108,14 +104,14 @@ void aktualizujSiatke(unsigned long teraz) {
     
   }
 }
-void sprawdzKolizjeZGraczem(unsigned long teraz) {
+void sprawdzKolizjeZGraczem(uint16_t teraz) {
   if (rekinZlapany) return;
   int marginesGracza = 4; 
   int marginesRekina = 6;
   int gLewo  = dotX + marginesGracza;
-  int gPrawo = dotX + BMP_WIDTH - marginesGracza;
+  int gPrawo = dotX + graczSzerokosc() - marginesGracza;
   int gGora  = dotY + marginesGracza;
-  int gDol   = dotY + BMP_HEIGHT - marginesGracza;
+  int gDol   = dotY + graczWysokosc() - marginesGracza;
   int rLewo  = rekinX + marginesRekina;
   int rPrawo = rekinX + REKIN_SIZE - marginesRekina;
   int rGora  = rekinY + marginesRekina;
@@ -124,9 +120,8 @@ void sprawdzKolizjeZGraczem(unsigned long teraz) {
   bool kolY = (rGora < gDol) && (rDol > gGora);
   if (kolX && kolY) {
     if (teraz - ostatnieUgryzienieCzas >= 500) {
-      zdrowieGracza -= 10;
+      odejmijZdrowie(zdrowieGracza, 10);
       ostatnieUgryzienieCzas = teraz;
-      if (zdrowieGracza < 0) zdrowieGracza = 0;
     }
   }
 }

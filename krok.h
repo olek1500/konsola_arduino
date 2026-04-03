@@ -1,5 +1,16 @@
 #pragma once
 #include <Adafruit_SH110X.h>
+
+const bool TEST_KROKODYL_JEDNA_RAKIETA = false; // Ustaw true tylko do szybkich testow.
+
+void rysujProstyWybuch(int srodekX, int srodekY, int promien) {
+  int rozmiar = promien * 2;
+  int startX = srodekX - promien;
+  int startY = srodekY - promien;
+  display.drawRect(startX, startY, rozmiar, rozmiar, SH110X_WHITE);
+  display.fillRect(srodekX - promien / 2, srodekY - promien / 2, promien, promien, SH110X_WHITE);
+}
+
 void rysujBK() {
   display.drawBitmap(
       krokX, krokY,
@@ -23,9 +34,10 @@ void aktualizujBK() {
   }
 }
 
-void aktualizujBombe(unsigned long teraz) {
-  const unsigned long interwalRuchu = 400UL;
-  const unsigned long czasKlatkiWybuchu = 300UL;
+void aktualizujBombe(uint16_t teraz) {
+  const uint16_t interwalRuchu = 400U;
+  const uint16_t czasKlatkiWybuchu = 220U;
+  const uint8_t promienieWybuchu[2] = {20, 30};
   int dbomb;
   if (!bombaAktywna) {
     if (random(0, 90) < 5) {
@@ -33,6 +45,7 @@ void aktualizujBombe(unsigned long teraz) {
       bombaY = krokY ;
       bombaAktywna = true;
       czyWybucha = false;
+      bombaWybuchTrafila = false;
       indeks_bomba = 0;
       ostatniaZmianaKlatki = teraz;
       bombaz = bombaY;
@@ -48,12 +61,7 @@ void aktualizujBombe(unsigned long teraz) {
       if (dbomb > 12) { 
         czyWybucha = true;
         indeks_bomba = 0;
-      }
-      
-      if (abs(bombaX - dotX-12) < 16 && abs(bombaY - dotY-12) < 16) {
-         zdrowieGracza -= 10; 
-         czyWybucha = true;
-         indeks_bomba = 0;
+        ostatniaZmianaKlatki = teraz;
       }
     }
     display.drawBitmap(bombaX, bombaY, bomba, 8, 12, SH110X_WHITE);
@@ -64,26 +72,37 @@ void aktualizujBombe(unsigned long teraz) {
       indeks_bomba++;
     }
     
-    if (indeks_bomba < 3) {
-      display.drawBitmap(
-        bombaX, bombaY,
-        buh[indeks_bomba].bitmapa,
-        buh[indeks_bomba].szerokosc,
-        buh[indeks_bomba].wysokosc,
-        SH110X_WHITE
-      );
+    if (indeks_bomba < 2) {
+      int bombaSrodekX = bombaX + 4;
+      int bombaSrodekY = bombaY + 6;
+      int graczSrodekX = dotX + graczSzerokosc() / 2;
+      int graczSrodekY = dotY + graczWysokosc() / 2;
+      int dx = bombaSrodekX - graczSrodekX;
+      int dy = bombaSrodekY - graczSrodekY;
+      int promienWybuchu = promienieWybuchu[indeks_bomba];
+
+      if (!bombaWybuchTrafila && dx * dx + dy * dy <= promienWybuchu * promienWybuchu) {
+        odejmijZdrowie(zdrowieGracza, 10);
+        bombaWybuchTrafila = true;
+      }
+
+      rysujProstyWybuch(bombaSrodekX, bombaSrodekY, promienWybuchu);
     } else {
       bombaAktywna = false;
     }
   }
 }
 
-bool aktualizujRakiete(unsigned long teraz) {
+bool aktualizujRakiete(uint16_t teraz) {
   if (!rakieta) {
-    int rant = random(0, 128);
-    if (rant < 100 && rant > 20 && random(0, 100) < 5) {
-      rakietax = rant;
-      rakietay = random(20, 56); 
+    const int zasiegPodniesienia = 13;
+    const int minSpawnX = 6;
+    const int maxSpawnX = (SCREEN_WIDTH - 32) + zasiegPodniesienia;
+    const int minSpawnY = 18;
+    const int maxSpawnY = (SCREEN_HEIGHT - 24) + zasiegPodniesienia;
+    if (random(0, 100) < 5) {
+      rakietax = random(minSpawnX, maxSpawnX);
+      rakietay = random(minSpawnY, maxSpawnY);
       rakieta = true;
       rakietaLeci = false; 
       rakieta_in = 0;      
@@ -104,7 +123,11 @@ bool aktualizujRakiete(unsigned long teraz) {
   if (abs(rdx) < 16 && abs(rdy) < 16) {
     rakieta = false;       
     rakietaLeci = false;   
-    zdrowieKrokodyla -= 10; 
+    if (TEST_KROKODYL_JEDNA_RAKIETA) {
+      zdrowieKrokodyla = 0;
+    } else {
+      odejmijZdrowie(zdrowieKrokodyla, 10);
+    }
     
     rakietaWybucha = true;
     rakietaWybuchX = rakietax;
@@ -146,10 +169,10 @@ void rysujrocka() {
       SH110X_WHITE);
 }
 
-void rysujWybuchRakiety(unsigned long teraz) {
+void rysujWybuchRakiety(uint16_t teraz) {
   if (!rakietaWybucha) return;
 
-  const unsigned long czasKlatkiWybuchu = 300UL;
+  const uint16_t czasKlatkiWybuchu = 300U;
 
   if (teraz - ostatniaZmianaKlatkiRakiety >= czasKlatkiWybuchu) {
     ostatniaZmianaKlatkiRakiety = teraz;
@@ -157,13 +180,19 @@ void rysujWybuchRakiety(unsigned long teraz) {
   }
 
   if (indeks_rakieta_wybuch < 3) {
-    display.drawBitmap(
-      rakietaWybuchX, rakietaWybuchY,
-      buh[indeks_rakieta_wybuch].bitmapa,
-      buh[indeks_rakieta_wybuch].szerokosc,
-      buh[indeks_rakieta_wybuch].wysokosc,
-      SH110X_WHITE
-    );
+    const unsigned char* bitmapa = explosion_f1;
+    uint8_t szerokosc = 24;
+    uint8_t wysokosc = 24;
+
+    if (indeks_rakieta_wybuch == 1) {
+      bitmapa = explosion_f2;
+      szerokosc = 32;
+      wysokosc = 32;
+    } else if (indeks_rakieta_wybuch == 2) {
+      bitmapa = explosion_f3;
+    }
+
+    display.drawBitmap(rakietaWybuchX, rakietaWybuchY, bitmapa, szerokosc, wysokosc, SH110X_WHITE);
   } else {
     rakietaWybucha = false; 
   }

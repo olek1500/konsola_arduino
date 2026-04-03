@@ -16,11 +16,6 @@ Postac samolot[2] = {
   {krok_lewo, 40, 32},
   {krok_prawo,40,32},
 };
-Postac buh[3] = {
-  {explosion_f1,24,24},
-  {explosion_f2,32,32},
-  {explosion_f3,24,24},
-};
 Postac rakietaa[4] = {
   {rakieta1,16,8},
   {rakieta2,16,8},

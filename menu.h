@@ -2,37 +2,47 @@
 #include <Adafruit_SH110X.h>
 #include "dane.h" 
 extern Adafruit_SH1106G display;
-extern int animFaza;
-extern int animLitera;
-extern int animY;
-extern int animMiganie;
+extern uint8_t animFaza;
+extern uint8_t animLitera;
+extern int8_t animY;
+extern uint8_t animMiganie;
 extern bool animNapisWyswietlony;
-extern unsigned long animNapisCzas;
-extern unsigned long poprzedniCzasAnimacja;
-extern int zdrowieGracza;
-extern int movement_speed; 
-extern unsigned int trudnosc[];
+extern uint16_t animNapisCzas;
+extern uint16_t poprzedniCzasAnimacja;
+extern uint8_t zdrowieGracza;
+extern uint8_t maxZdrowieGracza;
+extern int8_t movement_speed; 
+extern bool graczMaButy;
+extern const uint8_t STALE_HP_GRACZA;
+extern uint8_t maxZdrowieRekina;
+extern uint8_t zdrowieRekina;
+extern uint8_t maxZdrowieKrokodyla;
+extern uint8_t zdrowieKrokodyla;
+extern uint8_t maxZdrowieKubka;
+extern uint8_t zdrowieKubka;
+extern const uint8_t hpRekinaTrudnosc[3];
+extern const uint8_t hpKrokodylaTrudnosc[3];
+extern const uint8_t hpKubkaTrudnosc[3];
+enum TypNagrodyBossa {
+  NAGRODA_BUTY = 0,
+  NAGRODA_RAKIETA = 1
+};
 #ifndef SCREEN_WIDTH
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #endif
-#pragma once
-#include <Adafruit_SH110X.h>
-extern Adafruit_SH1106G display;
-extern int animFaza;
-extern int animLitera;
-extern int animY;
-extern int animMiganie;
-extern bool animNapisWyswietlony;
-extern unsigned long animNapisCzas;
-extern unsigned long poprzedniCzasAnimacja;
-extern int zdrowieGracza;
-extern unsigned int trudnosc[];
-void stphase(bool wygrales);
+void stphase(bool wygrales, TypNagrodyBossa typNagrody);
 void bombardiro();
-void rysujPaskiZdrowia(int zdrowieopp);
+void rysujPaskiZdrowia(int zdrowieopp, int maxZdrowieOpp);
 void start();
 bool animacjaPoczatkowa();
+
+void rysujIkoneRakietyNagrody() {
+  display.drawBitmap(36, 16, rakietaa[3].bitmapa, rakietaa[3].szerokosc, rakietaa[3].wysokosc, SH110X_WHITE);
+  display.drawBitmap(52, 16, rakietaa[3].bitmapa, rakietaa[3].szerokosc, rakietaa[3].wysokosc, SH110X_WHITE);
+  display.drawBitmap(44, 32, rakietaa[3].bitmapa, rakietaa[3].szerokosc, rakietaa[3].wysokosc, SH110X_WHITE);
+}
+
 void start() {
   bool flash = true;
   while (PIND & B00100000) {
@@ -47,7 +57,7 @@ void start() {
       display.println(F("PRESS START"));
     }
     display.display();
-    static unsigned long lastMillis = 0;
+    static uint16_t lastMillis = 0;
     if (millis() - lastMillis > 500) {
       flash = !flash;
       lastMillis = millis();
@@ -63,7 +73,7 @@ void start() {
 bool animacjaPoczatkowa() {
   const int pozX[3]   = {20, 54, 88};
   const int doceloweY = 16;
-  unsigned long teraz = millis();
+  uint16_t teraz = millis();
 
   if (animFaza == 0) {
     if (teraz - poprzedniCzasAnimacja >= 15) {
@@ -102,16 +112,21 @@ bool animacjaPoczatkowa() {
         display.print("T");
       }
       if (animMiganie % 2 == 0) {
-        display.fillCircle(10,  10, 2, SH110X_WHITE);
-        display.fillCircle(110, 15, 1, SH110X_WHITE);
-        display.fillCircle(64,   5, 2, SH110X_WHITE);
-        display.fillCircle(25,  50, 1, SH110X_WHITE);
-        display.fillCircle(105, 45, 2, SH110X_WHITE);
+        display.drawPixel(10, 10, SH110X_WHITE);
+        display.drawPixel(11, 10, SH110X_WHITE);
+        display.drawPixel(110, 15, SH110X_WHITE);
+        display.drawPixel(64, 5, SH110X_WHITE);
+        display.drawPixel(64, 6, SH110X_WHITE);
+        display.drawPixel(25, 50, SH110X_WHITE);
+        display.drawPixel(105, 45, SH110X_WHITE);
+        display.drawPixel(106, 45, SH110X_WHITE);
       } else {
-        display.fillCircle(15,  20, 1, SH110X_WHITE);
-        display.fillCircle(115, 30, 2, SH110X_WHITE);
-        display.fillCircle(50,  55, 1, SH110X_WHITE);
-        display.fillCircle(80,  50, 2, SH110X_WHITE);
+        display.drawPixel(15, 20, SH110X_WHITE);
+        display.drawPixel(115, 30, SH110X_WHITE);
+        display.drawPixel(116, 30, SH110X_WHITE);
+        display.drawPixel(50, 55, SH110X_WHITE);
+        display.drawPixel(80, 50, SH110X_WHITE);
+        display.drawPixel(81, 50, SH110X_WHITE);
       }
       display.display();
       animMiganie++;
@@ -147,10 +162,10 @@ bool animacjaPoczatkowa() {
 }
 const char* wybierzPoziom() {
   const char* tryb[] = {"easy", "medium", "hard"};
-  int wybranyIndeks = 0;
+  int8_t wybranyIndeks = 0;
   bool wybrano = false;
 
-  unsigned long start300 = millis();
+  uint16_t start300 = millis();
   while (millis() - start300 < 300) {}
 
   while (!wybrano) {
@@ -158,7 +173,7 @@ const char* wybierzPoziom() {
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(20, 5);
-    display.print("Choose difficulty:");
+    display.print("Difficulty");
     for (int i = 0; i < 3; i++) {
       display.setCursor(30, 27 + (i * 12));
       display.print(wybranyIndeks == i ? "> " : "  ");
@@ -169,57 +184,74 @@ const char* wybierzPoziom() {
     if (!(PIND & B10000000)) {
       wybranyIndeks--;
       if (wybranyIndeks < 0) wybranyIndeks = 2;
-      unsigned long t = millis(); while (millis() - t < 150);
+      uint16_t t = millis(); while ((uint16_t)(millis() - t) < 150) {}
     }
     if (!(PINB & B00000010)) {
       wybranyIndeks++;
       if (wybranyIndeks > 2) wybranyIndeks = 0;
-      unsigned long t = millis(); while (millis() - t < 150);
+      uint16_t t = millis(); while ((uint16_t)(millis() - t) < 150) {}
     }
     if (!(PIND & B00100000)) {
       wybrano = true;
-      unsigned long t = millis(); while (millis() - t < 200);
-      zdrowieGracza = trudnosc[wybranyIndeks];
+      uint16_t t = millis(); while ((uint16_t)(millis() - t) < 200) {}
+      maxZdrowieGracza = STALE_HP_GRACZA;
+      zdrowieGracza = maxZdrowieGracza;
+      maxZdrowieRekina = hpRekinaTrudnosc[wybranyIndeks];
+      zdrowieRekina = maxZdrowieRekina;
+      maxZdrowieKrokodyla = hpKrokodylaTrudnosc[wybranyIndeks];
+      zdrowieKrokodyla = maxZdrowieKrokodyla;
+      maxZdrowieKubka = hpKubkaTrudnosc[wybranyIndeks];
+      zdrowieKubka = maxZdrowieKubka;
     }
   }
   return tryb[wybranyIndeks];
 }
-void stphase(bool wygrales) {
+void stphase(bool wygrales, TypNagrodyBossa typNagrody) {
   display.clearDisplay();
   display.setTextColor(SH110X_WHITE);
-  int x = (display.width() - SCREEN_WIDTH) / 2;
-  int y = (display.height() - SCREEN_HEIGHT) / 2;
   if (wygrales) {
     display.setTextSize(1);
-    display.setCursor(10, 0); 
-    display.println("YOU RECEIVED A NEW ITEM!");
-    display.drawBitmap(40,16,shoes,40,40,SH110X_WHITE);
-
+    display.setCursor(30, 0);
+    display.println("NEW ITEM");
+    if (typNagrody == NAGRODA_BUTY) {
+      display.drawBitmap(44, 14, shoes, 40, 40, SH110X_WHITE);
+      graczMaButy = true;
+      movement_speed++;
+    } else {
+      rysujIkoneRakietyNagrody();
+    }
   } else {
-    display.setTextSize(2); 
-    display.setCursor(20, 0); 
+    display.setTextSize(2);
+    display.setCursor(20, 0);
     display.println("YOU LOOSE");
   }
   display.display();
-  movement_speed ++;
 }
 void bombardiro()
-  { display.clearDisplay();
-    display.drawBitmap(16,16,krokodyl_bombowiec,96,48,SH110X_WHITE);
+  {
+    display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
-    display.setCursor(15,0);
-    display.print("NEXT OPPONENT :");
+    display.setCursor(15, 6);
+    display.print("NEXT BOSS");
+    display.setTextSize(2);
+    display.setCursor(18, 28);
+    display.print("CROCODILE");
     display.display();
   }
-void rysujPaskiZdrowia(int zdrowieopp) {
+int szerokoscPaskaZdrowia(int zdrowie, int maxZdrowie, int maxSzerokosc) {
+  if (maxZdrowie <= 0) return 0;
+  zdrowie = constrain(zdrowie, 0, maxZdrowie);
+  return (static_cast<long>(zdrowie) * maxSzerokosc) / maxZdrowie;
+}
+void rysujPaskiZdrowia(int zdrowieopp, int maxZdrowieOpp) {
   display.drawRect(0, 0, 26, 4, SH110X_WHITE);
   display.drawRect(76, 0, 52, 4, SH110X_WHITE);
-  int szerokoscGracz = map(zdrowieGracza, 0, 50, 0, 24);
+  int szerokoscGracz = szerokoscPaskaZdrowia(zdrowieGracza, maxZdrowieGracza, 24);
   if (szerokoscGracz > 0) {
     display.fillRect(1, 1, szerokoscGracz, 2, SH110X_WHITE);
   }
-  int szerokoscRekin = map(zdrowieopp, 0, 100, 0, 50);
+  int szerokoscRekin = szerokoscPaskaZdrowia(zdrowieopp, maxZdrowieOpp, 50);
   if (szerokoscRekin > 0) {
     display.fillRect(127 - szerokoscRekin, 1, szerokoscRekin, 2, SH110X_WHITE);
   }

@@ -1,46 +1,106 @@
 #pragma once
 #include <Adafruit_SH110X.h>
-extern int dotY;
-extern int dotX;
-extern int aktualny_indeks;
-extern int movement_speed;
-void obslugaWejscia()
-  {
-    if (!(PIND & B10000000)) {
-    dotY -= movement_speed;
-      if (dotY < 6) dotY = 6; 
-    aktualny_indeks = 2;
-    }
-    if (!(PINB & B00000010)) {
-    dotY += movement_speed;
-      if (dotY + BMP_HEIGHT > SCREEN_HEIGHT) 
-        dotY = SCREEN_HEIGHT - BMP_HEIGHT;
-    aktualny_indeks = 3;
-    }
-    if (!(PINB & B00000001)) {
-    dotX += movement_speed;
-      if (dotX + BMP_WIDTH> SCREEN_WIDTH) 
-      dotX = SCREEN_WIDTH-BMP_WIDTH;
-    aktualny_indeks = 0;
-    }
-    if (!(PINB & B00000100)) {
-    dotX -= movement_speed;
-      if (dotX < 0) dotX = 0;
-    aktualny_indeks = 1;
+#include "dane.h"
+extern int8_t dotY;
+extern int8_t dotX;
+extern uint8_t aktualny_indeks;
+extern int8_t movement_speed;
+extern bool graczMaButy;
+extern bool graczMaRakiete;
+extern uint16_t dashOstatniCzas;
+extern bool przyciskDashaBylWcisniety;
+inline int graczSzerokosc() {
+  return ludziki[aktualny_indeks].szerokosc;
+}
+inline int graczWysokosc() {
+  return ludziki[aktualny_indeks].wysokosc;
+}
+inline bool przyciskDashaWcisniety() {
+  return !(PIND & B00010000);
+}
+inline uint8_t dystansDashaGracza() {
+  if (graczMaButy && !graczMaRakiete) {
+    return 28;
+  }
+  return 16;
+}
+inline uint16_t cooldownDashaGracza() {
+  if (graczMaButy && !graczMaRakiete) {
+    return 2000U;
+  }
+  return 450U;
+}
+inline void wykonajDashGracza() {
+  const int dystansDasha = dystansDashaGracza();
+
+  switch (aktualny_indeks) {
+    case 0:
+      dotX += dystansDasha;
+      break;
+    case 1:
+      dotX -= dystansDasha;
+      break;
+    case 2:
+      dotY -= dystansDasha;
+      break;
+    default:
+      dotY += dystansDasha;
+      break;
+  }
+
+  if (dotX < 0) dotX = 0;
+  if (dotY < 6) dotY = 6;
+  if (dotX + graczSzerokosc() > SCREEN_WIDTH) {
+    dotX = SCREEN_WIDTH - graczSzerokosc();
+  }
+  if (dotY + graczWysokosc() > SCREEN_HEIGHT) {
+    dotY = SCREEN_HEIGHT - graczWysokosc();
   }
 }
-void sprawdzAtakGracza(unsigned long teraz) {
+void obslugaWejscia()
+  {
+    uint16_t teraz = millis();
+    if (!(PIND & B10000000)) {
+    aktualny_indeks = 2;
+    dotY -= movement_speed;
+      if (dotY < 6) dotY = 6; 
+    }
+    if (!(PINB & B00000010)) {
+    aktualny_indeks = 3;
+    dotY += movement_speed;
+      if (dotY + graczWysokosc() > SCREEN_HEIGHT)
+        dotY = SCREEN_HEIGHT - graczWysokosc();
+    }
+    if (!(PINB & B00000001)) {
+    aktualny_indeks = 0;
+    dotX += movement_speed;
+      if (dotX + graczSzerokosc() > SCREEN_WIDTH)
+      dotX = SCREEN_WIDTH - graczSzerokosc();
+    }
+    if (!(PINB & B00000100)) {
+    aktualny_indeks = 1;
+    dotX -= movement_speed;
+      if (dotX < 0) dotX = 0;
+    }
+
+    bool dashWcisniety = przyciskDashaWcisniety();
+    if (graczMaButy && !graczMaRakiete &&
+        dashWcisniety && !przyciskDashaBylWcisniety &&
+        (uint16_t)(teraz - dashOstatniCzas) >= cooldownDashaGracza()) {
+      dashOstatniCzas = teraz;
+      wykonajDashGracza();
+    }
+    przyciskDashaBylWcisniety = dashWcisniety;
+}
+void sprawdzAtakGracza(uint16_t teraz) {
   if (!(PIND & B00100000)) { 
     if (teraz - ostatniAtakCzas >= 500) {
       ostatniAtakCzas = teraz;
-      bool kolX = (rekinX < dotX - 4 + BMP_WIDTH) && (rekinX + REKIN_SIZE / 2 > dotX - 4);
-      bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE / 2 > dotY);
+      bool kolX = (rekinX < dotX - 4 + graczSzerokosc()) && (rekinX + REKIN_SIZE / 2 > dotX - 4);
+      bool kolY = (rekinY < dotY + graczWysokosc()) && (rekinY + REKIN_SIZE / 2 > dotY);
 
       if (kolX && kolY) {
-        zdrowieRekina -= 5;
-        if (zdrowieRekina < 0) {
-          zdrowieRekina = 0;
-        }
+        odejmijZdrowie(zdrowieRekina, 5);
         atakTrafiony      = true;
         atakTrafionyCzas  = teraz;
       }
