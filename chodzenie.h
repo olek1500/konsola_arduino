@@ -29,3 +29,21 @@ void obslugaWejscia()
     aktualny_indeks = 1;
   }
 }
+void sprawdzAtakGracza(unsigned long teraz) {
+  if (!(PIND & B00100000)) { 
+    if (teraz - ostatniAtakCzas >= 500) {
+      ostatniAtakCzas = teraz;
+      bool kolX = (rekinX < dotX - 4 + BMP_WIDTH) && (rekinX + REKIN_SIZE / 2 > dotX - 4);
+      bool kolY = (rekinY < dotY + BMP_HEIGHT) && (rekinY + REKIN_SIZE / 2 > dotY);
+
+      if (kolX && kolY) {
+        zdrowieRekina -= 5;
+        if (zdrowieRekina < 0) {
+          zdrowieRekina = 0;
+        }
+        atakTrafiony      = true;
+        atakTrafionyCzas  = teraz;
+      }
+    }
+  }
+}

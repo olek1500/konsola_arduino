@@ -21,3 +21,9 @@ Postac buh[3] = {
   {explosion_f2,32,32},
   {explosion_f3,24,24},
 };
+Postac rakietaa[4] = {
+  {rakieta1,16,8},
+  {rakieta2,16,8},
+  {rakieta3,8,16},
+  {rakieta4,8,16},
+};
