@@ -17,80 +17,132 @@ Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 
 
 bool bombaAktywna = false;
 bool czyWybucha = false;
+bool bombaWybuchTrafila = false;
 bool rakieta = false;
 bool rakietaLeci = false;
 bool rakietaWybucha = false;
-int bombaz;
-int bombaX = 0;
-int bombaY = 0;
-int indeks_bomba = 0;
-unsigned long ostatniaZmianaKlatki = 0;
+int8_t bombaz = 0;
+int16_t bombaX = 0;
+int8_t bombaY = 0;
+uint8_t indeks_bomba = 0;
+uint16_t ostatniaZmianaKlatki = 0;
 
-int rakietax = 0;
-int rakietay = 0;
-int rakieta_in = 0;
+int8_t rakietax = 0;
+int8_t rakietay = 0;
+uint8_t rakieta_in = 0;
 
-int rakietaWybuchX = 0;
-int rakietaWybuchY = 0;
-int indeks_rakieta_wybuch = 0;
-unsigned long ostatniaZmianaKlatkiRakiety = 0;
+int8_t rakietaWybuchX = 0;
+int8_t rakietaWybuchY = 0;
+uint8_t indeks_rakieta_wybuch = 0;
+uint16_t ostatniaZmianaKlatkiRakiety = 0;
 
-int obecnaKlatka = 0;
-int dotY = 10; 
-int dotX = 10;
-int aktualny_indeks = 0;
+int8_t dotY = 10; 
+int8_t dotX = 10;
+uint8_t aktualny_indeks = 0;
 
-int rekinX        = 90;
-int rekinY        = 30;
-int rekinDX       =  1;  
-int rekinDY       =  0;  
-int rekinIndeks   =  2;  
-int predkoscRekina = 2;
+int8_t rekinX = 90;
+int8_t rekinY = 30;
+uint8_t rekinIndeks = 2;
+uint8_t predkoscRekina = 2;
 
-int krokX         = 128;
-int krokY         = 32;
-int krokDX        = -2;
-int krokKierunek  = 0;
+int16_t krokX = 128;
+int8_t krokY = 32;
+int8_t krokDX = -2;
+uint8_t krokKierunek = 0;
 
-unsigned long ostatnieUgryzienieCzas = 0;
-unsigned long ostatniAtakCzas = 0;
+bool graczMaRakiete = false;
+bool graczMaButy = false;
+uint8_t maxZdrowieKubka = 120;
+uint8_t zdrowieKubka = maxZdrowieKubka;
+uint8_t kubekX = 84;
+uint8_t kubekY = 24;
+uint8_t kubekAkcja = 0;
+uint8_t kubekFaza = 1;
+int8_t kubekDashDX = 0;
+int8_t kubekDashDY = 0;
+uint8_t kubekCelX = 64;
+uint8_t kubekCelY = 32;
+bool kubekDashPoziomy = true;
+uint16_t kubekAkcjaStart = 0;
+uint16_t kubekNastepnaAkcja = 0;
+uint16_t kubekOgluszonyDo = 0;
+uint16_t kubekWrazliwyDo = 0;
+uint16_t kubekHitFlashDo = 0;
+bool mieczAktywny[2] = {false, false};
+int16_t mieczX[2] = {0, 0};
+int16_t mieczY[2] = {0, 0};
+int8_t mieczDX[2] = {0, 0};
+int8_t mieczDY[2] = {0, 0};
+bool plamaAktywna[3] = {false, false, false};
+uint8_t plamaX[3] = {0, 0, 0};
+uint8_t plamaY[3] = {0, 0, 0};
+uint16_t plamaDo[3] = {0, 0, 0};
+uint16_t ostatnieObrazenieFinal = 0;
+bool rakietaGraczaAktywna = false;
+int16_t rakietaGraczaX = 0;
+int16_t rakietaGraczaY = 0;
+int8_t rakietaGraczaDX = 0;
+int8_t rakietaGraczaDY = 0;
+uint8_t rakietaGraczaKierunek = 0;
+uint16_t rakietaGraczaCooldownDo = 0;
+bool przyciskAtakuBylWcisniety = false;
+uint16_t przyciskAtakuWcisniecieCzas = 0;
+bool przytrzymanieZuzyteNaRakiete = false;
+
+uint16_t ostatnieUgryzienieCzas = 0;
+uint16_t ostatniAtakCzas = 0;
 bool atakTrafiony = false;
-unsigned long atakTrafionyCzas = 0;
-const unsigned long CZAS_ANIMACJI_ATAKU = 400UL;
+uint16_t atakTrafionyCzas = 0;
+const uint16_t CZAS_ANIMACJI_ATAKU = 400U;
 
-int zdrowieGracza = 0;
-int zdrowieRekina = 10;
-int zdrowieKrokodyla = 100;
+uint8_t zdrowieGracza = 0;
+const uint8_t STALE_HP_GRACZA = 100;
+uint8_t maxZdrowieGracza = STALE_HP_GRACZA;
+uint8_t maxZdrowieRekina = 20;
+uint8_t zdrowieRekina = maxZdrowieRekina;
+uint8_t maxZdrowieKrokodyla = 150;
+uint8_t zdrowieKrokodyla = maxZdrowieKrokodyla;
 
 bool          siatkaAktywna      = false;
-int           siatkaX            = 8;
-int           siatkaY            = 8;
-unsigned long ostatniSpawnSiatki = 0;
-const unsigned long CZAS_ZAMROZENIA  = 3500UL;
+uint8_t       siatkaX            = 8;
+uint8_t       siatkaY            = 8;
+uint16_t      ostatniSpawnSiatki = 0;
+const uint16_t CZAS_ZAMROZENIA   = 3500U;
 bool          rekinZlapany       = false;
-unsigned long rekinZlapayCzas    = 0;
+uint16_t rekinZlapayCzas    = 0;
 
-unsigned long poprzedniCzasAnimacja = 0;
-unsigned long poprzedniCzasGra      = 0;
+uint16_t poprzedniCzasAnimacja = 0;
+uint16_t poprzedniCzasGra      = 0;
 
-int  animFaza             = 0;
-int  animLitera           = 0;
-int  animY                = -30;
-int  animMiganie          = 0;
-int movement_speed        = 2;
+uint8_t animFaza             = 0;
+uint8_t animLitera           = 0;
+int8_t  animY                = -30;
+uint8_t animMiganie          = 0;
+int8_t movement_speed        = 2;
+uint16_t dashOstatniCzas = 0;
+bool przyciskDashaBylWcisniety = false;
 bool animNapisWyswietlony = false;
-unsigned long animNapisCzas = 0;
-int indeksBK = 0;
+uint16_t animNapisCzas = 0;
 
-unsigned int trudnosc[] = {
-  50, 20, 1
-};
+const uint8_t hpRekinaTrudnosc[3] = {15, 20, 30};
+const uint8_t hpKrokodylaTrudnosc[3] = {120, 150, 200};
+const uint8_t hpKubkaTrudnosc[3] = {100, 120, 160};
+
+inline void odejmijZdrowie(uint8_t& zdrowie, uint8_t obrazenia) {
+  if (zdrowie <= obrazenia) {
+    zdrowie = 0;
+  } else {
+    zdrowie -= obrazenia;
+  }
+}
 
 #include "menu.h"
 #include "chodzenie.h"
 #include "dane.h"
 #include "rekin.h"
 #include "krok.h"
+#include "minigry.h"
+#include "finalboss.h"
 
 
 int main() {
@@ -98,8 +150,8 @@ int main() {
   PORTD |= B10110000;
   PORTB |= B00000111;
 
-  unsigned long startCzas = millis();
-  while (millis() - startCzas < 250) {}
+  uint16_t startCzas = millis();
+  while ((uint16_t)(millis() - startCzas) < 250) {}
 
   display.begin(i2c_Address, true);
   display.setRotation(2);
@@ -108,7 +160,8 @@ int main() {
 
   start();
   while (!animacjaPoczatkowa()) {}
-  const char* aktualnyPoziom = wybierzPoziom();
+  wybierzPoziom();
+  randomSeed(millis());
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
@@ -116,19 +169,15 @@ int main() {
   display.print(F("LOADING ..."));
   display.display();
   delay(500);
-  rekin();
-  delay(1000);
-  unsigned long startLvlCzas = millis();
-  while (millis() - startLvlCzas < 1500) {}
   display.clearDisplay();
 
   while (true) {
-    unsigned long teraz = millis();
+    uint16_t teraz = millis();
     if (teraz - poprzedniCzasGra >= 16) {
       poprzedniCzasGra = teraz;
       obslugaWejscia();
       display.clearDisplay();
-      rysujPaskiZdrowia(zdrowieRekina);
+      rysujPaskiZdrowia(zdrowieRekina, maxZdrowieRekina);
       display.drawBitmap(
         dotX, dotY,
         ludziki[aktualny_indeks].bitmapa,
@@ -153,25 +202,24 @@ int main() {
       
       if (zdrowieGracza <= 0) {
         display.display();
-        stphase(false); 
+        stphase(false, NAGRODA_BUTY);
         return 0;
       }
       if (zdrowieRekina <= 0) {
-        stphase(true);
+        stphase(true, NAGRODA_BUTY);
         display.display();
         delay(2000);
-        bombardiro();
-        delay(2000);
+        zagrajMiniGrePrzedKrokodylem();
         display.clearDisplay();
         
         while(1) {
-          unsigned long teraz = millis();
-          static unsigned long poprzedniCzasBK = 0;
+          uint16_t teraz = millis();
+          static uint16_t poprzedniCzasBK = 0;
           if (teraz - poprzedniCzasBK >= 16) {
             poprzedniCzasBK = teraz;
             obslugaWejscia();
             display.clearDisplay();
-            rysujPaskiZdrowia(zdrowieKrokodyla);
+            rysujPaskiZdrowia(zdrowieKrokodyla, maxZdrowieKrokodyla);
             display.drawBitmap(
               dotX, dotY,
               ludziki[aktualny_indeks].bitmapa,
@@ -194,13 +242,56 @@ int main() {
             
             if (zdrowieGracza <= 0) {
               display.display();
-              stphase(false); 
+              stphase(false, NAGRODA_RAKIETA);
               return 0;
             }
             if (zdrowieKrokodyla <= 0) {
               display.display();
-              stphase(true); 
-              return 0;
+              stphase(true, NAGRODA_RAKIETA);
+              graczMaRakiete = true;
+              delay(2000);
+              zagrajMiniGrePrzedFinalem();
+              resetujFinalBossa();
+              display.clearDisplay();
+
+              while (1) {
+                uint16_t teraz = millis();
+                static uint16_t poprzedniCzasFinal = 0;
+                if (teraz - poprzedniCzasFinal >= 16) {
+                  poprzedniCzasFinal = teraz;
+                  obslugaWejscia();
+                  obsluzAtakGraczaNaKubka(teraz);
+                  aktualizujPlamyKawy(teraz);
+                  aktualizujMieczeKubka(teraz);
+                  aktualizujRakieteGracza(teraz);
+                  aktualizujKubka(teraz);
+                  sprawdzKontaktKubkaZGraczem(teraz);
+
+                  display.clearDisplay();
+                  rysujPaskiZdrowia(zdrowieKubka, maxZdrowieKubka);
+                  display.drawBitmap(
+                    dotX, dotY,
+                    ludziki[aktualny_indeks].bitmapa,
+                    ludziki[aktualny_indeks].szerokosc,
+                    ludziki[aktualny_indeks].wysokosc,
+                    SH110X_WHITE
+                  );
+                  rysujPlamyKawy(teraz);
+                  rysujMieczeKubka();
+                  rysujKubka(teraz);
+                  rysujRakieteGracza(teraz);
+                  display.display();
+
+                  if (zdrowieGracza <= 0) {
+                    display.display();
+                    stphase(false, NAGRODA_RAKIETA);
+                    return 0;
+                  }
+                  if (zdrowieKubka <= 0) {
+                    zakonczGrePoFinale();
+                  }
+                }
+              }
             }
           }
         }
