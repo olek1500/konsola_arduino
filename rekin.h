@@ -12,30 +12,51 @@ void rekin()
     display.print("SHARK");
     display.display();
 }
+
+uint8_t poziomRageRekina() {
+  if (maxZdrowieRekina == 0) return 0;
+  if ((uint16_t)zdrowieRekina * 4 <= maxZdrowieRekina) return 2;
+  if ((uint16_t)zdrowieRekina * 2 <= maxZdrowieRekina) return 1;
+  return 0;
+}
+
+uint8_t szybkoscRekinaWBiegu() {
+  return poziomRageRekina() == 1 ? predkoscRekina + 1 : predkoscRekina;
+}
+
+uint8_t opoznienieRuchuRekina() {
+  uint8_t rage = poziomRageRekina();
+  if (rage >= 2) return 1;
+  if (rage == 1) return 2;
+  return 3;
+}
+
 void aktualizujRekina() {
   if (rekinZlapany) return; 
   static int opoznienieRuchu = 0;
+  uint8_t opoznienieDocelowe = opoznienieRuchuRekina();
   opoznienieRuchu++;
-  if(opoznienieRuchu < 3) return; 
+  if(opoznienieRuchu < opoznienieDocelowe) return; 
   opoznienieRuchu = 0;
+  uint8_t szybkosc = szybkoscRekinaWBiegu();
   
   int diffX = dotX - rekinX;
   int diffY = dotY - rekinY;
 
   if (abs(diffX) > abs(diffY)) {
     if (diffX > 0) {
-      rekinX += predkoscRekina;
+      rekinX += szybkosc;
       rekinIndeks = 2; 
     } else if (diffX < 0) {
-      rekinX -= predkoscRekina;
+      rekinX -= szybkosc;
       rekinIndeks = 3; 
     }
   } else {
     if (diffY > 0) {
-      rekinY += predkoscRekina;
+      rekinY += szybkosc;
       rekinIndeks = 1; 
     } else if (diffY < 0) {
-      rekinY -= predkoscRekina;
+      rekinY -= szybkosc;
       rekinIndeks = 0; 
     }
   }
