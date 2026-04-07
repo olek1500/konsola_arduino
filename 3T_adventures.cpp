@@ -98,9 +98,9 @@ const uint16_t CZAS_ANIMACJI_ATAKU = 400U;
 uint8_t zdrowieGracza = 0;
 const uint8_t STALE_HP_GRACZA = 100;
 uint8_t maxZdrowieGracza = STALE_HP_GRACZA;
-uint8_t maxZdrowieRekina = 60;
+uint8_t maxZdrowieRekina = 20;
 uint8_t zdrowieRekina = maxZdrowieRekina;
-uint8_t maxZdrowieKrokodyla = 130;
+uint8_t maxZdrowieKrokodyla = 150;
 uint8_t zdrowieKrokodyla = maxZdrowieKrokodyla;
 
 bool          siatkaAktywna      = false;
@@ -124,8 +124,8 @@ bool przyciskDashaBylWcisniety = false;
 bool animNapisWyswietlony = false;
 uint16_t animNapisCzas = 0;
 
-const uint8_t hpRekinaTrudnosc[3] = {50, 60, 70};
-const uint8_t hpKrokodylaTrudnosc[3] = {100, 130, 170};
+const uint8_t hpRekinaTrudnosc[3] = {15, 20, 30};
+const uint8_t hpKrokodylaTrudnosc[3] = {120, 150, 200};
 const uint8_t hpKubkaTrudnosc[3] = {100, 120, 160};
 
 inline void odejmijZdrowie(uint8_t& zdrowie, uint8_t obrazenia) {

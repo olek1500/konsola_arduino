@@ -35,7 +35,7 @@ void aktualizujBK() {
 }
 
 void aktualizujBombe(uint16_t teraz) {
-  const uint16_t interwalRuchu = 280U;
+  const uint16_t interwalRuchu = 400U;
   const uint16_t czasKlatkiWybuchu = 220U;
   const uint8_t promienieWybuchu[2] = {20, 30};
   int dbomb;
@@ -56,7 +56,7 @@ void aktualizujBombe(uint16_t teraz) {
   if (!czyWybucha) {
     if (teraz - ostatniaZmianaKlatki >= interwalRuchu) {
       ostatniaZmianaKlatki = teraz;
-      bombaY += 5; 
+      bombaY += 4; 
       dbomb = bombaY - bombaz;
       if (dbomb > 12) { 
         czyWybucha = true;
